@@ -216,3 +216,42 @@ class ds_feedforward_network(dsnn.DSModule):
         x = self.fc2(x)
 
         return x
+
+class ds_denoising_ae(dsnn.DSModule):
+    def __init__(self):
+        super(ds_denoising_ae, self).__init__()
+
+        self.fc_ds = nn.ModuleList()
+
+        # deepspline parameters
+        opt_params = {
+            'size': 51,
+            'range_': 4,
+            'init': 'leaky_relu',
+            'save_memory': False
+        }
+
+        self.linear1 = nn.Linear(28*28, 64)
+        self.fc_ds.append(dsnn.DeepBSpline('fc', 64, **opt_params))
+        self.linear2 = nn.Linear(64, 28*28)
+        # self.fc_ds.append(dsnn.DeepBSpline('fc', 128, **opt_params))
+        # self.linear3 = nn.Linear(128, 64)
+        # self.fc_ds.append(dsnn.DeepBSpline('fc', 64, **opt_params))
+        # self.linear4 = nn.Linear(64, 128)
+        # self.fc_ds.append(dsnn.DeepBSpline('fc', 128, **opt_params))
+        # self.linear5 = nn.Linear(128, 256)
+        # self.fc_ds.append(dsnn.DeepBSpline('fc', 256, **opt_params))
+        # self.linear6 = nn.Linear(256, 28*28)
+
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        out = self.fc_ds[0](self.linear1(x))
+        # out = self.fc_ds[1](self.linear2(out))
+        # out = self.fc_ds[2](self.linear3(out))
+        # out = self.fc_ds[3](self.linear4(out))
+        # out = self.fc_ds[4](self.linear5(out))
+        out = self.linear2(out)
+        out = self.sigmoid(out)
+
+        return out

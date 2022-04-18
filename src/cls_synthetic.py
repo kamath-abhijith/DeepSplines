@@ -101,7 +101,7 @@ with torch.no_grad():
 
     # Predictions on mesh
     num_samples = 100
-    x1, x2 = np.meshgrid(np.linspace(0, 2, num_samples), \
+    x1, x2 = np.meshgrid(np.linspace(0, 2, num_samples),\
         np.linspace(0, 2, num_samples))
     x1 = x1.astype(np.float32)
     x2 = x2.astype(np.float32)

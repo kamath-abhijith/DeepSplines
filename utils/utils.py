@@ -279,6 +279,19 @@ def add_noise(data, snr=None, sigma=None, jitter=None):
             size=data.shape)
         return data + noise
 
+def normalised_mean_squared_error(a, b):
+    '''
+    Computes mean-squared-error between a and b
+
+    :param a: input vector
+    :param b: input vector
+
+    :return: mse between a and b
+
+    '''
+
+    return np.abs(np.mean((a-b)**2))/np.abs(np.mean((a)**2))
+
 def numpy_to_torch(data):
     return torch.from_numpy(data)
 

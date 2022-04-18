@@ -112,10 +112,12 @@ test_loader=DataLoader(test_set, batch_size=1, shuffle=True)
 
 # %% SETUP
   
-model = models.denoising_ae().to(device)
+model = models.ds_denoising_ae().to(device)
 criterion = nn.MSELoss()
-# optimizer = torch.optim.SGD(model.parameters(),lr=0.01,weight_decay=1e-5)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+main_optimiser = torch.optim.Adam(model.parameters_no_deepspline(),
+    lr=0.001)
+aux_optimiser = torch.optim.Adam(model.parameters_deepspline())
+lambd = 1e-4
 
 # %% TRAINING
 
@@ -124,9 +126,9 @@ force_train = False
 os.makedirs('./../models/denoising_ae', exist_ok=True)
 path = './../models/denoising_ae/'
 
-if os.path.isfile(path + 'model_mnist_relu.pth') and force_train==False:
+if os.path.isfile(path + 'model_mnist_deepspline_layer_2.pth') and force_train==False:
     print('PICKING PRE-TRAINED MODEL')
-    model = torch.load(path + 'model_mnist_relu.pth')
+    model = torch.load(path + 'model_mnist_deepspline_layer_2.pth')
     model.eval()
 
 else:
@@ -145,13 +147,17 @@ else:
       
       #-----------------Forward Pass----------------------
       output = model(noisy)
-      loss = criterion(output,clean)
       
       #-----------------Backward Pass---------------------
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
+      loss = criterion(output,clean)
+      loss = loss + lambd * model.TV2()
       
+      main_optimiser.zero_grad()
+      aux_optimiser.zero_grad()
+      loss.backward()
+      main_optimiser.step()
+      aux_optimiser.step()
+
       running_loss += loss.item()
       epoch_loss += loss.item()
 
@@ -160,7 +166,7 @@ else:
     running_loss = 0
     print("======> epoch: {}/{}, Loss:{}".format(epoch, num_epochs, loss.item()))
 
-  torch.save(model, path + 'model_mnist_relu.pth')
+  torch.save(model, path + 'model_mnist_deepspline_layer_2.pth')
   print('TRAINING COMPLETE!')
 
 # %% TESTING
@@ -219,7 +225,7 @@ for idx in range((6)):
   axes[idx,2].imshow(output,cmap="gray")
   axes[idx,2].axis('off')
 
-plt.savefig(path + 'relu_network' + '.pdf', format='pdf')
+plt.savefig(path + 'deepspline_network_layer_2' + '.pdf', format='pdf')
 print("Average PSNR: {}".format(np.mean(errors)))
 
 # %%
